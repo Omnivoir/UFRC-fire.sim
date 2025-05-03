@@ -1,25 +1,10 @@
 const map = L.map('map').setView([36.8656, -87.4886], 13);
 
-// Load base map tiles
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: 'Map data © OpenStreetMap contributors'
 }).addTo(map);
 
-// Fire stations with coordinates
-const stations = [
-    { name: "Station 1", lat: 36.86604, lng: -87.48994 },
-    { name: "Station 2", lat: 36.87143, lng: -87.47594 },
-    { name: "Station 3", lat: 36.86133, lng: -87.48851 }
-];
-
-// Plot each station
-stations.forEach(station => {
-    L.marker([station.lat, station.lng])
-        .addTo(map)
-        .bindPopup(station.name);
-});
-
-// Mock fire locations (to be replaced with RHQC-based logic)
+// 🔥 MOCK fire locations (to be replaced with RHQC-based later)
 const fireLocations = [
     { lat: 36.869, lng: -87.48, address: "100 Skyline Dr" },
     { lat: 36.861, lng: -87.49, address: "4210 Canton Pike" },
@@ -27,8 +12,35 @@ const fireLocations = [
     { lat: 36.873, lng: -87.475, address: "2700 Lafayette Rd" },
 ];
 
+// 👨‍🚒 Select fire truck
+const fireTruckUnit = "ladder-1"; // Change this to test different units
+
+// 🔥 Select a fire location randomly
 const fire = fireLocations[Math.floor(Math.random() * fireLocations.length)];
 
+// 🏠 Station definitions
+const stations = [
+    { name: "Station 1", number: 1, lat: 36.86604, lng: -87.48994 },
+    { name: "Station 2", number: 2, lat: 36.87143, lng: -87.47594 },
+    { name: "Station 3", number: 3, lat: 36.86133, lng: -87.48851 },
+    { name: "Station 4", number: 4, lat: 36.87360, lng: -87.46000 }
+];
+
+// 🏠 Render all stations with matching PNGs
+stations.forEach(station => {
+    const stationIcon = L.icon({
+        iconUrl: `assets/station-${station.number}.png`,
+        iconSize: [45, 45],
+        iconAnchor: [22, 45],
+        popupAnchor: [0, -45]
+    });
+
+    L.marker([station.lat, station.lng], { icon: stationIcon })
+        .addTo(map)
+        .bindPopup(station.name);
+});
+
+// 🔥 Fire icon
 const fireIcon = L.icon({
     iconUrl: 'assets/fire-icon.png',
     iconSize: [40, 40],
@@ -41,53 +53,37 @@ L.marker([fire.lat, fire.lng], { icon: fireIcon })
     .bindPopup("🔥 Fire Location")
     .openPopup();
 
-// Display dispatch
+// 📣 Dispatch message
 document.getElementById("dispatch-panel").innerHTML = `
     <strong>🔥 STRUCTURE FIRE DISPATCHED</strong><br>
     Address: <strong>${fire.address}</strong><br>
-    Units: E1, L1, BC1 en route...
+    Units: ${fireTruckUnit.toUpperCase()} en route...
 `;
 
-// --- Spawn user fire truck at closest station ---
+// 🚒 Match truck to its assigned station
+const assignedStationNumber = parseInt(fireTruckUnit.match(/\d/)[0]);
+const assignedStation = stations.find(s => s.number === assignedStationNumber);
 
-// Distance function
-function getDistance(a, b) {
-    const dx = a.lat - b.lat;
-    const dy = a.lng - b.lng;
-    return Math.sqrt(dx * dx + dy * dy);
-}
-
-// Find nearest station to fire
-let closestStation = stations[0];
-let shortestDist = getDistance(fire, closestStation);
-
-for (let i = 1; i < stations.length; i++) {
-    const dist = getDistance(fire, stations[i]);
-    if (dist < shortestDist) {
-        shortestDist = dist;
-        closestStation = stations[i];
-    }
-}
-
-// Truck icon
+// 🚒 Fire truck icon
 const truckIcon = L.icon({
-    iconUrl: 'https://cdn-icons-png.flaticon.com/512/809/809957.png',
-    iconSize: [40, 40],
-    iconAnchor: [20, 20],
-    popupAnchor: [0, -20]
+    iconUrl: `assets/${fireTruckUnit}.png`,
+    iconSize: [45, 45],
+    iconAnchor: [22, 22],
+    popupAnchor: [0, -22]
 });
 
-let truckMarker = L.marker([closestStation.lat, closestStation.lng], {
+// Spawn truck at assigned station
+let truckLat = assignedStation.lat;
+let truckLng = assignedStation.lng;
+
+let truckMarker = L.marker([truckLat, truckLng], {
     icon: truckIcon,
     draggable: false
-}).addTo(map).bindPopup("🚒 You (Fire Truck)");
+}).addTo(map).bindPopup(`🚒 ${fireTruckUnit.toUpperCase()}`);
 
-// Allow movement with arrow keys
-let truckLat = closestStation.lat;
-let truckLng = closestStation.lng;
-
+// 🧭 Arrow-key movement
 document.addEventListener("keydown", function (e) {
-    const moveAmount = 0.0005; // fine-tune movement
+    const moveAmount = 0.0005;
 
     switch (e.key) {
         case "ArrowUp": truckLat += moveAmount; break;
@@ -97,4 +93,32 @@ document.addEventListener("keydown", function (e) {
     }
 
     truckMarker.setLatLng([truckLat, truckLng]);
+
+    // ✅ Arrival detection
+    const dx = truckLat - fire.lat;
+    const dy = truckLng - fire.lng;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < 0.0008) {
+        alert("✅ You have arrived at the fire!");
+    }
 });
+
+// 💧 Hydrant Colors
+const hydrantColors = ["red", "orange", "green", "blue"];
+const hydrantColor = hydrantColors[Math.floor(Math.random() * hydrantColors.length)];
+
+// 💧 Place hydrant near fire (50–100 feet offset)
+const hydrantOffset = 0.0004;
+const hydrantLat = fire.lat + (Math.random() > 0.5 ? hydrantOffset : -hydrantOffset);
+const hydrantLng = fire.lng + (Math.random() > 0.5 ? hydrantOffset : -hydrantOffset);
+
+const hydrantIcon = L.icon({
+    iconUrl: `assets/hydrant-${hydrantColor}.png`,
+    iconSize: [30, 30],
+    iconAnchor: [15, 30],
+    popupAnchor: [0, -30]
+});
+
+L.marker([hydrantLat, hydrantLng], { icon: hydrantIcon })
+    .addTo(map)
+    .bindPopup(`💧 Hydrant (${hydrantColor.toUpperCase()})`);
