@@ -8,11 +8,25 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
     <div id="map"></div>
-    <div id="dispatch-panel">Awaiting scenario...</div>
+    <div id="dispatch-panel">
+        <strong>🚒 Select Your Fire Truck:</strong><br>
+        <select id="truck-select">
+            <option value="ladder-1">Ladder 1 (Station 1)</option>
+            <option value="d1">D1 (Station 1)</option>
+            <option value="b1">B1 (Station 1)</option>
+            <option value="engine-2">Engine 2 (Station 2)</option>
+            <option value="engine-3">Engine 3 (Station 3)</option>
+            <option value="r3">R3 (Station 3)</option>
+            <option value="tower-4">Tower 4 (Station 4)</option>
+            <option value="d2">D2 (Station 4)</option>
+        </select>
+        <button onclick="startScenario()">Start Scenario</button>
+        <div id="dispatch-info" style="margin-top:10px;"></div>
+    </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="app.js"></script>
 </body>
+
 </html>
