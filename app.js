@@ -12,11 +12,12 @@ const fireLocations = [
 ];
 
 const stations = [
-    { name: "Station 1", number: 1, lat: 36.86604, lng: -87.48994, trucks: ["ladder-1", "d1", "b1"] },
-    { name: "Station 2", number: 2, lat: 36.87143, lng: -87.47594, trucks: ["engine-2"] },
-    { name: "Station 3", number: 3, lat: 36.86133, lng: -87.48851, trucks: ["engine-3", "r3"] },
-    { name: "Station 4", number: 4, lat: 36.87360, lng: -87.46000, trucks: ["tower-4", "d2"] }
+  { name: "Station 1", number: 1, lat: 36.86600, lng: -87.48995 },
+  { name: "Station 2", number: 2, lat: 36.87140, lng: -87.47600 },
+  { name: "Station 3", number: 3, lat: 36.86128, lng: -87.48852 },
+  { name: "Station 4", number: 4, lat: 36.81711, lng: -87.49747 }
 ];
+
 
 // Show all station icons
 stations.forEach(station => {
