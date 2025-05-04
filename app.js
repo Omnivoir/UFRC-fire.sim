@@ -4,12 +4,6 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: 'Map data © OpenStreetMap contributors'
 }).addTo(map);
 
-const fireLocations = [
-    { lat: 36.869, lng: -87.48, address: "100 Skyline Dr" },
-    { lat: 36.861, lng: -87.49, address: "4210 Canton Pike" },
-    { lat: 36.858, lng: -87.487, address: "1330 S Virginia St" },
-    { lat: 36.873, lng: -87.475, address: "2700 Lafayette Rd" },
-];
 
 const stations = [
   { name: "Station 1", number: 1, lat: 36.86600, lng: -87.48995 },
