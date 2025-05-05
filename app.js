@@ -1,4 +1,4 @@
-// UERC Fire Simulator - Fresh Build with Road-Based Station Placement
+// UERC Fire Simulator - Road-Based Station Placement (Fixed Overpass Queries)
 
 const map = L.map('map').setView([36.8656, -87.4886], 13);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -20,13 +20,22 @@ stations.forEach(s => s.trucks.forEach(truck => {
 }));
 
 async function loadStations() {
-  const bounds = map.getBounds();
-  const overpassUrl = `https://overpass-api.de/api/interpreter?data=[out:json];way[highway][name]("${bounds.getSouth()}","${bounds.getWest()}","${bounds.getNorth()}","${bounds.getEast()}");out geom;`;
-  const data = await fetch(overpassUrl).then(res => res.json());
+  const overpassQuery = `
+    [out:json];
+    (
+      way["name"="Phillip Meacham Way"];
+      way["name"="Skyline Dr"];
+      way["name"="Canton St"];
+      way["name"="Jerry Claybourne Way"];
+    );
+    out geom;
+  `;
+  const url = "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(overpassQuery);
+  const data = await fetch(url).then(res => res.json());
 
   stations.forEach(station => {
-    const match = data.elements.find(e => e.tags && e.tags.name === station.road && e.geometry);
-    if (!match) return console.warn("No road match for", station.name);
+    const match = data.elements.find(e => e.tags && e.tags.name.toLowerCase() === station.road.toLowerCase());
+    if (!match || !match.geometry) return console.warn("No road match for", station.name);
 
     const segment = match.geometry[Math.floor(match.geometry.length / 2)];
     station.lat = segment.lat;
