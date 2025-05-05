@@ -3,7 +3,7 @@ let map = L.map('map').setView([36.8656, -87.4886], 13);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: 'Map data © OpenStreetMap contributors'
 }).addTo(map);
-
+loadStations(map);
 map.on('mousemove', function (e) {
   const lat = e.latlng.lat.toFixed(5);
   const lng = e.latlng.lng.toFixed(5);
@@ -72,19 +72,6 @@ async function loadStations(map) {
   }
 }
 
-
-
-// Show all station icons
-stations.forEach(station => {
-    const stationIcon = L.icon({
-        iconUrl: `assets/station-${station.number}.png`,
-        iconSize: [45, 45],
-        iconAnchor: [22, 45]
-    });
-
-    L.marker([station.lat, station.lng], { icon: stationIcon })
-        .addTo(map)
-        .bindPopup(station.name);
 
     // Add trucks at station (static, not user-controlled)
     station.trucks.forEach(truck => {
