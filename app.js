@@ -1,4 +1,4 @@
-// UERC Fire Simulator - Fully Fixed Road + Fire Placement in Hopkinsville Only
+// UERC Fire Simulator - Manual Station Placement Mode Enabled
 
 const map = L.map('map').setView([36.8656, -87.4886], 13);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -6,10 +6,10 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 
 const stations = [
-  { name: "Station 1", number: 1, road: "West 1st Street", trucks: ["ladder-1", "d1", "b1"] },
-  { name: "Station 2", number: 2, road: "Skyline Drive", trucks: ["engine-2"] },
-  { name: "Station 3", number: 3, road: "Canton Street", trucks: ["engine-3", "r3"] },
-  { name: "Station 4", number: 4, road: "9505 Jerry Clayborne Way", trucks: ["tower-4", "d2"] }
+  { name: "Station 1", number: 1, lat: 36.8545, lng: -87.4888, trucks: ["ladder-1", "d1", "b1"] },
+  { name: "Station 2", number: 2, lat: 36.8651, lng: -87.4764, trucks: ["engine-2"] },
+  { name: "Station 3", number: 3, lat: 36.8422, lng: -87.4489, trucks: ["engine-3", "r3"] },
+  { name: "Station 4", number: 4, lat: 36.8171, lng: -87.4975, trucks: ["tower-4", "d2"] }
 ];
 
 stations.forEach(s => s.trucks.forEach(truck => {
@@ -19,35 +19,20 @@ stations.forEach(s => s.trucks.forEach(truck => {
   document.getElementById("truck-select").appendChild(option);
 }));
 
-async function loadStations() {
-  const overpassQuery = `
-    [out:json];
-    area["name"="Hopkinsville"][admin_level=8];
-    (way(area)[highway];);
-    out geom;
-  `;
-  const url = "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(overpassQuery);
-  const data = await fetch(url).then(res => res.json());
-
-  stations.forEach(station => {
-    const match = data.elements.find(e => e.tags && e.tags.name && e.tags.name.toLowerCase() === station.road.toLowerCase());
-    if (!match || !match.geometry) {
-      console.warn(`No match found for ${station.name}: ${station.road}`);
-      return;
-    }
-
-    const midpoint = match.geometry[Math.floor(match.geometry.length / 2)];
-    station.lat = midpoint.lat;
-    station.lng = midpoint.lon;
-
-    const icon = L.icon({
-      iconUrl: `assets/station-${station.number}.png`,
-      iconSize: [45, 45],
-      iconAnchor: [22, 45]
-    });
-    L.marker([station.lat, station.lng], { icon }).addTo(map).bindPopup(station.name);
+stations.forEach(station => {
+  const icon = L.icon({
+    iconUrl: `assets/station-${station.number}.png`,
+    iconSize: [45, 45],
+    iconAnchor: [22, 45]
   });
-}
+  L.marker([station.lat, station.lng], { icon }).addTo(map).bindPopup(station.name);
+});
+
+// 🔧 Manual Placement Tool (Temporary - Log Lat/Lng on Click)
+map.on('click', function (e) {
+  const { lat, lng } = e.latlng;
+  console.log(`{ name: "New Station", lat: ${lat.toFixed(6)}, lng: ${lng.toFixed(6)}, trucks: [] },`);
+});
 
 async function startScenario() {
   const truckId = document.getElementById("truck-select").value;
@@ -96,5 +81,3 @@ async function startScenario() {
     }
   });
 }
-
-loadStations();
