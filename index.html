@@ -1,180 +1,36 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hopkinsville Fire Simulator</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>UERC Fire Simulator</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    #map { height: 100vh; width: 100%; }
+    #dispatch-panel {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(255,255,255,0.95);
+      padding: 10px;
+      border-radius: 5px;
+      z-index: 1000;
+      font-family: sans-serif;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+  </style>
 </head>
 <body>
-    <div id="map"></div>
-    <div id="dispatch-panel">
-        <strong>🚒 Select Your Fire Truck:</strong><br>
-        <select id="truck-select">
-            <option value="ladder-1">Ladder 1 (Station 1)</option>
-            <option value="d1">D1 (Station 1)</option>
-            <option value="b1">B1 (Station 1)</option>
-            <option value="engine-2">Engine 2 (Station 2)</option>
-            <option value="engine-3">Engine 3 (Station 3)</option>
-            <option value="r3">R3 (Station 3)</option>
-            <option value="tower-4">Tower 4 (Station 4)</option>
-            <option value="d2">D2 (Station 4)</option>
-        </select>
-        <button onclick="startScenario()">Start Scenario</button>
-        <div id="dispatch-info" style="margin-top:10px;"></div>
-    </div>
-<div id="latlng-tracker" style="
-  position: absolute;
-  bottom: 10px;
-  left: 10px;
-  background: rgba(0,0,0,0.7);
-  color: #fff;
-  padding: 4px 8px;
-  font-size: 14px;
-  border-radius: 4px;
-  font-family: monospace;
-  z-index: 1000;">
-  Lat: 0, Lng: 0
+
+<div id="map"></div>
+<div id="dispatch-panel">
+  <strong>🚒 Select Your Fire Truck:</strong><br>
+  <select id="truck-select"></select>
+  <button onclick="startScenario()">Start Scenario</button>
+  <div id="dispatch-info" style="margin-top:10px;"></div>
 </div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>
-const map = L.map('map').setView([36.8656, -87.4886], 14);
-
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: 'Map data © OpenStreetMap contributors'
-}).addTo(map);
-
-const stations = [
-  { name: "Station 1", number: 1, lat: 36.86600, lng: -87.48995 },
-  { name: "Station 2", number: 2, lat: 36.87140, lng: -87.47600 },
-  { name: "Station 3", number: 3, lat: 36.86128, lng: -87.48852 },
-  { name: "Station 4", number: 4, lat: 36.81711, lng: -87.49747 }
-];
-
-
-stations.forEach(s => {
-  const icon = L.icon({
-    iconUrl: `assets/station-${s.number}.png`,
-    iconSize: [45, 45],
-    iconAnchor: [22, 45]
-  });
-  L.marker([s.lat, s.lng], { icon }).addTo(map).bindPopup(s.name);
-});
-
-const allTrucks = {
-  "ladder-1": 1,
-  "d1": 1,
-  "b1": 1,
-  "engine-2": 2,
-  "engine-3": 3,
-  "r3": 3,
-  "tower-4": 4,
-  "d2": 4
-};
-for (const truck in allTrucks) {
-  const option = document.createElement("option");
-  option.value = truck;
-  option.textContent = `${truck.toUpperCase()} (Station ${allTrucks[truck]})`;
-  document.getElementById("truck-select").appendChild(option);
-}
-
-async function startScenario() {
-  const truckId = document.getElementById("truck-select").value;
-  const stationNum = allTrucks[truckId];
-  const station = stations.find(s => s.number === stationNum);
-
-  const truckIcon = L.icon({
-    iconUrl: `assets/${truckId}.png`,
-    iconSize: [45, 45],
-    iconAnchor: [22, 22]
-  });
-  let truckLat = station.lat, truckLng = station.lng;
-  const truckMarker = L.marker([truckLat, truckLng], {
-    icon: truckIcon
-  }).addTo(map).bindPopup(truckId.toUpperCase());
-
-  const bounds = map.getBounds();
-  const overpassUrl = `https://overpass-api.de/api/interpreter?data=[out:json];way[highway](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});out geom;`;
-  const osmData = await fetch(overpassUrl).then(res => res.json());
-
-  const roads = osmData.elements.filter(el => el.type === "way" && el.tags && el.tags.name && el.geometry);
-  if (roads.length === 0) {
-    alert("No roads found!");
-    return;
-  }
-
-  const selectedRoad = roads[Math.floor(Math.random() * roads.length)];
-  const geom = selectedRoad.geometry;
-  const segment = geom[Math.floor(Math.random() * geom.length)];
-  const fireLat = segment.lat;
-  const fireLng = segment.lon;
-  const roadName = selectedRoad.tags.name;
-
-  const fireIcon = L.icon({
-    iconUrl: "assets/fire-icon.png",
-    iconSize: [40, 40],
-    iconAnchor: [20, 40]
-  });
-  L.marker([fireLat, fireLng], { icon: fireIcon })
-    .addTo(map).bindPopup("🔥 Fire Location").openPopup();
-
-  const rhqc = getRHQCCode(fireLat, fireLng);
-  document.getElementById("dispatch-info").innerHTML = `
-    <strong>🔥 STRUCTURE FIRE DISPATCHED</strong><br>
-    Address: <strong>123 ${roadName}</strong><br>
-    Unit: ${truckId.toUpperCase()}<br>
-    Quadrant: <strong>${rhqc}</strong>
-  `;
-
-  const hydrantColors = ["red", "orange", "green", "blue"];
-  const hydrantColor = hydrantColors[Math.floor(Math.random() * hydrantColors.length)];
-  const hydrantIcon = L.icon({
-    iconUrl: `assets/hydrant-${hydrantColor}.png`,
-    iconSize: [30, 30],
-    iconAnchor: [15, 30]
-  });
-  const offset = 0.0004;
-  const hydrantLat = fireLat + (Math.random() > 0.5 ? offset : -offset);
-  const hydrantLng = fireLng + (Math.random() > 0.5 ? offset : -offset);
-  L.marker([hydrantLat, hydrantLng], { icon: hydrantIcon })
-    .addTo(map).bindPopup(`💧 Hydrant (${hydrantColor.toUpperCase()})`);
-
-  document.addEventListener("keydown", function (e) {
-    const move = 0.0005;
-    if (e.key === "ArrowUp") truckLat += move;
-    if (e.key === "ArrowDown") truckLat -= move;
-    if (e.key === "ArrowLeft") truckLng -= move;
-    if (e.key === "ArrowRight") truckLng += move;
-    truckMarker.setLatLng([truckLat, truckLng]);
-
-    const dx = truckLat - fireLat;
-    const dy = truckLng - fireLng;
-    if (Math.sqrt(dx * dx + dy * dy) < 0.0008) {
-      alert("✅ You have arrived at the fire!");
-    }
-  });
-}
-
-function getRHQCCode(lat, lng) {
-  const centerLat = 36.8656, centerLng = -87.4886;
-  const boxSize = 0.05;
-  let code = "";
-  for (let i = 0; i < 5; i++) {
-    const half = boxSize / Math.pow(2, i + 1);
-    const midLat = centerLat;
-    const midLng = centerLng;
-    const inNorth = lat > midLat;
-    const inEast = lng > midLng;
-    if (inNorth && !inEast) code += "1";
-    else if (inNorth && inEast) code += "2";
-    else if (!inNorth && !inEast) code += "3";
-    else code += "4";
-  }
-  return code;
-}
-</script>
+<script src="app.js"></script>
 
 </body>
-
 </html>
