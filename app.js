@@ -1,4 +1,4 @@
-// UERC Fire Simulator - Road-Based Station Placement (Fixed Overpass Queries)
+// UERC Fire Simulator - Road-Based Station Placement (Fuzzy Matching Fixed)
 
 const map = L.map('map').setView([36.8656, -87.4886], 13);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -19,27 +19,27 @@ stations.forEach(s => s.trucks.forEach(truck => {
   document.getElementById("truck-select").appendChild(option);
 }));
 
+function normalize(str) {
+  return str.toLowerCase().replace(/\b(road|rd|drive|dr|street|st|way|wy|avenue|ave)\b/g, '').replace(/[^a-z0-9]/g, '').trim();
+}
+
 async function loadStations() {
-  const overpassQuery = `
-    [out:json];
-    (
-      way["name"="Phillip Meacham Way"];
-      way["name"="Skyline Dr"];
-      way["name"="Canton St"];
-      way["name"="Jerry Claybourne Way"];
-    );
-    out geom;
-  `;
-  const url = "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(overpassQuery);
-  const data = await fetch(url).then(res => res.json());
+  const bounds = map.getBounds();
+  const overpassUrl = `https://overpass-api.de/api/interpreter?data=[out:json];way[highway](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});out geom;`;
+  const data = await fetch(overpassUrl).then(res => res.json());
 
   stations.forEach(station => {
-    const match = data.elements.find(e => e.tags && e.tags.name.toLowerCase() === station.road.toLowerCase());
-    if (!match || !match.geometry) return console.warn("No road match for", station.name);
+    const normalizedTarget = normalize(station.road);
+    const match = data.elements.find(e => e.tags && normalize(e.tags.name || '') === normalizedTarget);
 
-    const segment = match.geometry[Math.floor(match.geometry.length / 2)];
-    station.lat = segment.lat;
-    station.lng = segment.lon;
+    if (!match || !match.geometry) {
+      console.warn(`No match found for ${station.name}: ${station.road}`);
+      return;
+    }
+
+    const midpoint = match.geometry[Math.floor(match.geometry.length / 2)];
+    station.lat = midpoint.lat;
+    station.lng = midpoint.lon;
 
     const icon = L.icon({
       iconUrl: `assets/station-${station.number}.png`,
