@@ -1,4 +1,4 @@
-// UERC Fire Simulator - Road-Based Station Placement (Fuzzy Matching Fixed)
+// UERC Fire Simulator - Fully Fixed Road + Fire Placement in Hopkinsville Only
 
 const map = L.map('map').setView([36.8656, -87.4886], 13);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -6,10 +6,10 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 
 const stations = [
-  { name: "Station 1", number: 1, road: "Phillip Meacham Way", trucks: ["ladder-1", "d1", "b1"] },
-  { name: "Station 2", number: 2, road: "Skyline Dr", trucks: ["engine-2"] },
-  { name: "Station 3", number: 3, road: "Canton St", trucks: ["engine-3", "r3"] },
-  { name: "Station 4", number: 4, road: "Jerry Claybourne Way", trucks: ["tower-4", "d2"] }
+  { name: "Station 1", number: 1, road: "Philip Meacham Way", trucks: ["ladder-1", "d1", "b1"] },
+  { name: "Station 2", number: 2, road: "Skyline Drive", trucks: ["engine-2"] },
+  { name: "Station 3", number: 3, road: "Canton Street", trucks: ["engine-3", "r3"] },
+  { name: "Station 4", number: 4, road: "Jerry Claiborne Way", trucks: ["tower-4", "d2"] }
 ];
 
 stations.forEach(s => s.trucks.forEach(truck => {
@@ -19,19 +19,18 @@ stations.forEach(s => s.trucks.forEach(truck => {
   document.getElementById("truck-select").appendChild(option);
 }));
 
-function normalize(str) {
-  return str.toLowerCase().replace(/\b(road|rd|drive|dr|street|st|way|wy|avenue|ave)\b/g, '').replace(/[^a-z0-9]/g, '').trim();
-}
-
 async function loadStations() {
-  const bounds = map.getBounds();
-  const overpassUrl = `https://overpass-api.de/api/interpreter?data=[out:json];way[highway](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});out geom;`;
-  const data = await fetch(overpassUrl).then(res => res.json());
+  const overpassQuery = `
+    [out:json];
+    area["name"="Hopkinsville"][admin_level=8];
+    (way(area)[highway];);
+    out geom;
+  `;
+  const url = "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(overpassQuery);
+  const data = await fetch(url).then(res => res.json());
 
   stations.forEach(station => {
-    const normalizedTarget = normalize(station.road);
-    const match = data.elements.find(e => e.tags && normalize(e.tags.name || '') === normalizedTarget);
-
+    const match = data.elements.find(e => e.tags && e.tags.name && e.tags.name.toLowerCase() === station.road.toLowerCase());
     if (!match || !match.geometry) {
       console.warn(`No match found for ${station.name}: ${station.road}`);
       return;
@@ -60,8 +59,15 @@ async function startScenario() {
   let truckLat = station.lat, truckLng = station.lng;
   const truckMarker = L.marker([truckLat, truckLng], { icon }).addTo(map);
 
-  const bounds = map.getBounds();
-  const roadData = await fetch(`https://overpass-api.de/api/interpreter?data=[out:json];way[highway](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});out geom;`).then(r => r.json());
+  const overpassQuery = `
+    [out:json];
+    area["name"="Hopkinsville"][admin_level=8];
+    (way(area)[highway];);
+    out geom;
+  `;
+  const url = "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(overpassQuery);
+  const roadData = await fetch(url).then(r => r.json());
+
   const roads = roadData.elements.filter(e => e.type === "way" && e.geometry && e.tags && e.tags.name);
   const selected = roads[Math.floor(Math.random() * roads.length)];
   const point = selected.geometry[Math.floor(Math.random() * selected.geometry.length)];
