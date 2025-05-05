@@ -6,10 +6,10 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 
 const stations = [
-  { name: "Station 1", number: 1, road: "Philip Meacham Way", trucks: ["ladder-1", "d1", "b1"] },
+  { name: "Station 1", number: 1, road: "W 1st Street", trucks: ["ladder-1", "d1", "b1"] },
   { name: "Station 2", number: 2, road: "Skyline Drive", trucks: ["engine-2"] },
   { name: "Station 3", number: 3, road: "Canton Street", trucks: ["engine-3", "r3"] },
-  { name: "Station 4", number: 4, road: "Jerry Claiborne Way", trucks: ["tower-4", "d2"] }
+  { name: "Station 4", number: 4, road: "Jerry Clayborne Way", trucks: ["tower-4", "d2"] }
 ];
 
 stations.forEach(s => s.trucks.forEach(truck => {
