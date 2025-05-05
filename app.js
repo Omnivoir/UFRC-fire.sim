@@ -6,11 +6,24 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 
 const stations = [
-  { name: "Station 1", number: 1, lat: 36.86600, lng: -87.48995 },
-  { name: "Station 2", number: 2, lat: 36.87140, lng: -87.47600 },
-  { name: "Station 3", number: 3, lat: 36.86128, lng: -87.48852 },
-  { name: "Station 4", number: 4, lat: 36.81711, lng: -87.49747 }
+  {
+    name: "Station 1", number: 1, lat: 36.86600, lng: -87.48995,
+    trucks: ["ladder-1", "d1", "b1"]
+  },
+  {
+    name: "Station 2", number: 2, lat: 36.87140, lng: -87.47600,
+    trucks: ["engine-2"]
+  },
+  {
+    name: "Station 3", number: 3, lat: 36.86128, lng: -87.48852,
+    trucks: ["engine-3", "r3"]
+  },
+  {
+    name: "Station 4", number: 4, lat: 36.81711, lng: -87.49747,
+    trucks: ["tower-4", "d2"]
+  }
 ];
+
 
 
 // Show all station icons
