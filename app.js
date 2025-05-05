@@ -4,7 +4,11 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: 'Map data © OpenStreetMap contributors'
 }).addTo(map);
 
-
+map.on('mousemove', function (e) {
+  const lat = e.latlng.lat.toFixed(5);
+  const lng = e.latlng.lng.toFixed(5);
+  document.getElementById('latlng-tracker').innerText = `Lat: ${lat}, Lng: ${lng}`;
+});
 const stations = [
   {
     name: "Station 1", number: 1, lat: 36.86600, lng: -87.48995,
