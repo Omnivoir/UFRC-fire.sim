@@ -6,9 +6,9 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 
 const stations = [
-  { name: "Station 1", number: 1, lat: 36.8712, lng: -87.4877, trucks: ["ladder-1", "d1", "b1"] },
-  { name: "Station 2", number: 2, lat: 36.8435, lng: -87.4773, trucks: ["engine-2"] },
-  { name: "Station 3", number: 3, lat: 36.8605, lng: -87.5169, trucks: ["engine-3", "r3"] },
+  { name: "Station 1", number: 1, lat: 36.87124, lng: -87.48773, trucks: ["ladder-1", "d1", "b1"] },
+  { name: "Station 2", number: 2, lat: 36.84363, lng: -87.47740, trucks: ["engine-2"] },
+  { name: "Station 3", number: 3, lat: 36.86056, lng: -87.51700, trucks: ["engine-3", "r3"] },
   { name: "Station 4", number: 4, lat: 36.8171, lng: -87.4975, trucks: ["tower-4", "d2"] }
 ];
 
